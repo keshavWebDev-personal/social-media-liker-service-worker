@@ -112,7 +112,6 @@ chrome.runtime.onMessage.addListener(({ type, title, ...data }, _, sendResponse)
                                     totalLikesCount = res.likesCount.value;
                                 }else{
                                     totalLikesCount = 0
-                                    console.log("Likes COunt Value2 : " + res.likesCount.value);
                                 }
                             };
                             sendResponse({ likes: totalLikesCount });
