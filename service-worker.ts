@@ -30,19 +30,15 @@ function stopAllLikeTasksLoops():Promise<Boolean> {
 async function startLiking_currPage(
     maxTime: number,
     minTime: number
-): Promise<Boolean> {
-    return new Promise(async (resolve, reject) => {
-
-        let [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-        if (!tab.id) {reject("Tab not Valid"); return};
-        let {status} = await chrome.tabs.sendMessage(tab.id, {
-            type: "action",
-            title: "Start Liking",
-            maxTime: maxTime,
-            minTime: minTime
-        });
-        resolve(status)
-    })
+) {
+    let [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (!tab.id) return
+    chrome.tabs.sendMessage(tab.id, {
+        type: "action",
+        title: "Start Liking",
+        maxTime: maxTime,
+        minTime: minTime
+    });
 }
 
 // -------------------------------------------------
@@ -54,18 +50,10 @@ chrome.runtime.onMessage.addListener(({ type, title, ...data }, _, sendResponse)
         case "action":
             switch (title) {
                 case "Start Liking":
-                    (async () => {
-                        try {
-                            let status = await startLiking_currPage(
-                                data.maxTime,
-                                data.minTime,
-                            );
-                            sendResponse({ status: status });    
-                        } catch (error) {
-                            sendResponse({ status: false });    
-                        }
-                    })()
-                    return true
+                    startLiking_currPage(
+                        data.maxTime,
+                        data.minTime,
+                    );
                     break;
                 case "Stop Liking":
                     (async () => {
@@ -124,10 +112,12 @@ chrome.runtime.onMessage.addListener(({ type, title, ...data }, _, sendResponse)
                                     totalLikesCount = res.likesCount.value;
                                 }else{
                                     totalLikesCount = 0
+                                    console.log("Likes COunt Value2 : " + res.likesCount.value);
                                 }
                             };
                             sendResponse({ likes: totalLikesCount });
                         } catch (error) {
+                            console.error(error);
                             sendResponse({ failed: true})
                         }
                     })();
@@ -147,12 +137,9 @@ chrome.runtime.onMessage.addListener(({ type, title, ...data }, _, sendResponse)
                     (async () => {
                         try {
                             let res = await chrome.storage.sync.get(["likesLimit"]);
-                            console.log(res);
-                            likesLimit = res.likesLimit.value;            
+                            likesLimit = res.likesLimit.value;
                             sendResponse({likesLimit: likesLimit});
                         } catch (error) {
-                            console.log("Nothing Found");
-                            
                             sendResponse({ failed: true})
                         }
                     })();
