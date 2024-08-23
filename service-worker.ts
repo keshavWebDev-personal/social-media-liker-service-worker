@@ -1,5 +1,3 @@
-import { webpageContext } from '../webpageContext.ts';
-
 let totalLikesCount = 0;
 let likesLimit = 0;
 let setupTabs:chrome.tabs.Tab[] = []
@@ -80,23 +78,6 @@ chrome.runtime.onMessage.addListener(({ type, title, ...data }, _, sendResponse)
                     })()
                     return true
                     break;
-                case "setup webpage context":
-                    (async () => {
-                        let tabs = await chrome.tabs.query({});
-                        tabs.forEach((tab) => {
-                            if (!setupTabs.some(setupTab => setupTab.id === tab.id)) {
-                                const {host_permissions} = chrome.runtime.getManifest();
-                                if (tab.id && tab.url?.match(host_permissions[0])){
-                                    chrome.scripting.executeScript({
-                                        target: { tabId: tab.id },
-                                        func: webpageContext,
-                                    });
-                                }
-                            }
-                        })
-                        setupTabs = tabs
-                    })()
-                    break
             }
             break;
         case "data":
@@ -166,6 +147,7 @@ chrome.runtime.onMessage.addListener(({ type, title, ...data }, _, sendResponse)
                     (async () => {
                         try {
                             let res = await chrome.storage.sync.get(["likesLimit"]);
+                            console.log(res);
                             likesLimit = res.likesLimit.value;            
                             sendResponse({likesLimit: likesLimit});
                         } catch (error) {
