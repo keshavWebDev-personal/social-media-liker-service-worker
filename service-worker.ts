@@ -8,21 +8,27 @@ let setupTabs:chrome.tabs.Tab[] = []
 function stopAllLikeTasksLoops():Promise<Boolean> {
     return new Promise(async (resolve, reject) => {
         const manifest = chrome.runtime.getManifest();
-        if (manifest.host_permissions) {
-            const urlPatterns = manifest.host_permissions;
-
+        if (manifest.content_scripts && manifest.content_scripts[0].matches.length > 0) {
+            const urlPatterns = manifest.content_scripts[0].matches;
             // Query for tabs matching these URL patterns
             let tabs = await chrome.tabs.query({ url: urlPatterns });
             let success = false
             for (let tab of tabs) {
                 if (!tab.id) return;
-                let {status} = await chrome.tabs.sendMessage(tab.id, {
-                    type: "action",
-                    title: "Stop Likes Task",
-                });
-                success = status || success
+                let status1 = null
+                try {
+                    let {status} = await chrome.tabs.sendMessage(tab.id, {
+                        type: "action",
+                        title: "Stop Likes Task",
+                    });
+                    status1= status
+                }catch(error){
+                    console.error("Tab is probably Inactive and Chached :- " + tab.url)
+                }
+                success = status1 || success
             }
-            resolve(success)
+            if (success) resolve(success)
+            else reject(success)
         }
     })
 }
@@ -59,7 +65,7 @@ chrome.runtime.onMessage.addListener(({ type, title, ...data }, _, sendResponse)
                     (async () => {
                         try {
                             let status = await stopAllLikeTasksLoops();
-                            sendResponse({ status: status });    
+                            sendResponse({ status: status });
                         } catch (error) {
                             sendResponse({ status: false });    
                         }
