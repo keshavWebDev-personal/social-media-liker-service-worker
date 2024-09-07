@@ -146,6 +146,7 @@ chrome.runtime.onMessage.addListener(({ type, title, ...data }, _, sendResponse)
                             sendResponse({likesLimit: likesLimit});
                         } catch (error) {
                             sendResponse({ failed: true})
+                            likesLimit = data.default
                         }
                     })();
                     return true;
